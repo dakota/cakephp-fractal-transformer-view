@@ -30,6 +30,11 @@ class FractalTransformerView extends JsonView
     protected $_serializer;
 
     /**
+     * @var array
+     */
+    protected $_specialVars;
+
+    /**
      * Constructor
      *
      * @param \Cake\Network\Request $request Request instance.
@@ -48,10 +53,6 @@ class FractalTransformerView extends JsonView
         }
 
         parent::__construct($request, $response, $eventManager, $viewOptions);
-
-        $this->_specialVars[] = '_transform';
-        $this->_specialVars[] = '_resourceKey';
-        $this->_specialVars[] = '_includes';
     }
 
     /**
@@ -89,7 +90,7 @@ class FractalTransformerView extends JsonView
     {
         $entity = null;
         if ($var instanceof Query) {
-            $entity = $var->repository()->newEntity();
+            $entity = $var->getRepository()->newEmptyEntity();
         } elseif ($var instanceof ResultSet) {
             $entity = $var->first();
         } elseif ($var instanceof EntityInterface) {
@@ -122,7 +123,7 @@ class FractalTransformerView extends JsonView
      */
     protected function getTransformer($var, $varName = false)
     {
-        $_transform = $this->get('_transform');
+        $_transform = $this->getConfig('transform');
         $transformerClass = $varName
             ? Hash::get((array)$_transform, $varName)
             : $_transform;
@@ -163,15 +164,15 @@ class FractalTransformerView extends JsonView
      */
     protected function transform(Manager $manager, $var, $varName = false)
     {
-        $transformer = $this->getTransformer($var, $varName)
+        $transformer = $this->getTransformer($var, $varName);
         if (!$transformer) {
             return $var;
         }
 
         if (is_array($var) || $var instanceof Query || $var instanceof ResultSet) {
-            $resource = new Collection($var, $transformer, $this->get('_resourceKey'));
+            $resource = new Collection($var, $transformer, $this->getConfig('resourceKey'));
         } elseif ($var instanceof EntityInterface) {
-            $resource = new Item($var, $transformer, $this->get('_resourceKey'));
+            $resource = new Item($var, $transformer, $this->getConfig('resourceKey'));
         } else {
             throw new Exception('Unserializable variable');
         }
@@ -182,16 +183,16 @@ class FractalTransformerView extends JsonView
     /**
      * Returns data to be serialized.
      *
-     * @param array|string|bool $serialize The name(s) of the view variable(s) that
+     * @param array|string $serialize The name(s) of the view variable(s) that
      *   need(s) to be serialized. If true all available view variables will be used.
      * @return mixed The data to serialize.
      */
-    protected function _dataToSerialize($serialize = true)
+    protected function _dataToSerialize($serialize)
     {
         $data = parent::_dataToSerialize($serialize);
 
         $serializer = $this->getSerializer();
-        $includes = $this->get('_includes');
+        $includes = $this->getConfig('includes');
         $manager = new Manager();
         $manager->setSerializer($serializer);
 

@@ -12,7 +12,7 @@ use FractalTransformerView\Serializer\ArraySerializer;
  */
 class ArraySerializerTest extends TestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         Configure::write('debug', false);

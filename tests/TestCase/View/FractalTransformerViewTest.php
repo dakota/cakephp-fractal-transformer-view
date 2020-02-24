@@ -21,7 +21,7 @@ class FractalTransformerViewTest extends TestCase
 {
     public $fixtures = ['plugin.FractalTransformerView.articles', 'plugin.FractalTransformerView.authors'];
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         Configure::write('debug', false);
@@ -68,7 +68,7 @@ class FractalTransformerViewTest extends TestCase
 
     public function testGetTransformerClassFromEntity()
     {
-        $entity = $this->Articles->newEntity();
+        $entity = $this->Articles->newEmptyEntity();
 
         $view = new FractalTransformerView();
 
@@ -80,7 +80,7 @@ class FractalTransformerViewTest extends TestCase
 
     public function testGetTransformerClassFromEntitiesArray()
     {
-        $entities = [$this->Articles->newEntity()];
+        $entities = [$this->Articles->newEmptyEntity()];
 
         $view = new FractalTransformerView();
 
@@ -92,7 +92,7 @@ class FractalTransformerViewTest extends TestCase
 
     public function testGetTransformerClassFromEntityWithNoTransformer()
     {
-        $entity = $this->Authors->newEntity();
+        $entity = $this->Authors->newEmptyEntity();
 
         $view = new FractalTransformerView();
 
@@ -124,7 +124,7 @@ class FractalTransformerViewTest extends TestCase
 
     public function testGetTransformerByVar()
     {
-        $entity = $this->Articles->newEntity();
+        $entity = $this->Articles->newEmptyEntity();
 
         $view = new FractalTransformerView();
 
@@ -136,10 +136,10 @@ class FractalTransformerViewTest extends TestCase
 
     public function testGetTransformerByVarName()
     {
-        $entity = $this->Authors->newEntity();
+        $entity = $this->Authors->newEmptyEntity();
 
         $view = new FractalTransformerView();
-        $view->set('_transform', ['author' => '\FractalTransformerView\Test\App\Model\Transformer\CustomAuthorTransformer']);
+        $view->setConfig('transform', ['author' => '\FractalTransformerView\Test\App\Model\Transformer\CustomAuthorTransformer']);
 
         $this->assertInstanceOf(
             'FractalTransformerView\Test\App\Model\Transformer\CustomAuthorTransformer',
@@ -149,10 +149,10 @@ class FractalTransformerViewTest extends TestCase
 
     public function testGetNoTransformerByVarName()
     {
-        $entity = $this->Articles->newEntity();
+        $entity = $this->Articles->newEmptyEntity();
 
         $view = new FractalTransformerView();
-        $view->set('_transform', ['article' => false]);
+        $view->setConfig('transform', ['article' => false]);
 
         $this->assertEquals(
             false,
@@ -161,30 +161,32 @@ class FractalTransformerViewTest extends TestCase
     }
 
     /**
-     * @expectedException Exception
-     * @expectedExceptionMessage Invalid Transformer class: NotExistingTransformer
+     * @return void
      */
     public function testGetTransformerByVarNameNotFound()
     {
-        $entity = $this->Articles->newEntity();
+        $entity = $this->Articles->newEmptyEntity();
 
         $view = new FractalTransformerView();
-        $view->set('_transform', ['article' => 'NotExistingTransformer']);
+        $view->setConfig('transform', ['article' => 'NotExistingTransformer']);
 
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Invalid Transformer class: NotExistingTransformer');
         $this->protectedMethodCall($view, 'getTransformer', [$entity, 'article']);
     }
 
     /**
-     * @expectedException Exception
-     * @expectedExceptionMessage Transformer class not instance of TransformerAbstract: \FractalTransformerView\Test\App\Model\Table\ArticlesTable
+     * @return void
      */
     public function testGetTransformerByVarNameInvalid()
     {
-        $entity = $this->Articles->newEntity();
+        $entity = $this->Articles->newEmptyEntity();
 
         $view = new FractalTransformerView();
-        $view->set('_transform', ['article' => '\FractalTransformerView\Test\App\Model\Table\ArticlesTable']);
+        $view->setConfig('transform', ['article' => '\FractalTransformerView\Test\App\Model\Table\ArticlesTable']);
 
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Transformer class not instance of TransformerAbstract: \FractalTransformerView\Test\App\Model\Table\ArticlesTable');
         $this->protectedMethodCall($view, 'getTransformer', [$entity, 'article']);
     }
 
@@ -241,8 +243,7 @@ class FractalTransformerViewTest extends TestCase
     }
 
     /**
-     * @expectedException Exception
-     * @expectedExceptionMessage Unserializable variable
+     * @return void
      */
     public function testTransformInvalid()
     {
@@ -251,8 +252,10 @@ class FractalTransformerViewTest extends TestCase
         $manager->setSerializer($serializer);
 
         $view = new FractalTransformerView();
-        $view->set('_transform', ['std' => '\FractalTransformerView\Test\App\Model\Transformer\CustomAuthorTransformer']);
+        $view->setConfig('transform', ['std' => '\FractalTransformerView\Test\App\Model\Transformer\CustomAuthorTransformer']);
 
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Unserializable variable');
         $this->protectedMethodCall($view, 'transform', [$manager, new stdClass(), 'std']);
     }
 
@@ -263,14 +266,13 @@ class FractalTransformerViewTest extends TestCase
 
         $view = new FractalTransformerView();
         $view->set(compact('article', 'author'));
-        $view->set('_serialize', ['article', 'author']);
-
+        
         $this->assertEquals(
             [
                 'article' => ['title' => 'First Article'],
                 'author' => $author,
             ],
-            $this->protectedMethodCall($view, '_dataToSerialize')
+            $this->protectedMethodCall($view, '_dataToSerialize', [['article', 'author']])
         );
     }
 
@@ -280,7 +282,7 @@ class FractalTransformerViewTest extends TestCase
 
         $view = new FractalTransformerView();
         $view->set(compact('article'));
-        $view->set('_serialize', 'article');
+        $view->setConfig('serialize', 'article');
 
         $this->assertEquals(
             ['title' => 'First Article'],
