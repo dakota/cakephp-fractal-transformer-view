@@ -1,7 +1,8 @@
 <?php
+declare(strict_types=1);
+
 namespace FractalTransformerView\View;
 
-use Cake\Core\Configure;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventManager;
 use Cake\Network\Request;
@@ -37,9 +38,9 @@ class FractalTransformerView extends JsonView
      * @param array $viewOptions An array of view options
      */
     public function __construct(
-        Request $request = null,
-        Response $response = null,
-        EventManager $eventManager = null,
+        ?Request $request = null,
+        ?Response $response = null,
+        ?EventManager $eventManager = null,
         array $viewOptions = []
     ) {
         if (isset($viewOptions['serializer'])) {
@@ -59,7 +60,7 @@ class FractalTransformerView extends JsonView
      * @param \League\Fractal\Serializer\SerializerAbstract|null $serializer Serializer to use
      * @return void
      */
-    public function setSerializer(SerializerAbstract $serializer = null)
+    public function setSerializer(?SerializerAbstract $serializer = null)
     {
         $this->_serializer = $serializer;
     }
@@ -117,7 +118,7 @@ class FractalTransformerView extends JsonView
      * @param mixed $var variable
      * @param bool $varName variable name
      * @return bool
-     * @throws Exception
+     * @throws \Exception
      */
     protected function getTransformer($var, $varName = false)
     {
@@ -138,7 +139,7 @@ class FractalTransformerView extends JsonView
             throw new Exception(sprintf('Invalid Transformer class: %s', $transformerClass));
         }
 
-        $transformer = new $transformerClass;
+        $transformer = new $transformerClass();
         if (!($transformer instanceof TransformerAbstract)) {
             throw new Exception(
                 sprintf(
@@ -154,15 +155,16 @@ class FractalTransformerView extends JsonView
     /**
      * Transform var using given manager
      *
-     * @param Manager $manager  Fractal manager
+     * @param \League\Fractal\Manager $manager Fractal manager
      * @param mixed $var variable
      * @param bool $varName variable name
      * @return array
-     * @throws Exception
+     * @throws \Exception
      */
     protected function transform(Manager $manager, $var, $varName = false)
     {
-        if (!$transformer = $this->getTransformer($var, $varName)) {
+        $transformer = $this->getTransformer($var, $varName)
+        if (!$transformer) {
             return $var;
         }
 

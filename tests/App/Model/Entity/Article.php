@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace FractalTransformerView\Test\App\Model\Entity;
 
@@ -10,5 +11,4 @@ use Cake\ORM\Entity;
  */
 class Article extends Entity
 {
-
 }

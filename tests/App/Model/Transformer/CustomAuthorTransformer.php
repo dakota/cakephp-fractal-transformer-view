@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace FractalTransformerView\Test\App\Model\Transformer;
 
 use FractalTransformerView\Test\App\Model\Entity\Author;

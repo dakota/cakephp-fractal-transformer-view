@@ -1,11 +1,11 @@
 <?php
+declare(strict_types=1);
+
 namespace FractalTransformerView\Test\TestCase\View;
 
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
-use Cake\View\View;
-use Exception;
 use FractalTransformerView\Serializer\ArraySerializer;
 use FractalTransformerView\View\FractalTransformerView;
 use League\Fractal\Manager;
@@ -19,7 +19,6 @@ use stdClass;
  */
 class FractalTransformerViewTest extends TestCase
 {
-
     public $fixtures = ['plugin.FractalTransformerView.articles', 'plugin.FractalTransformerView.authors'];
 
     public function setUp()
@@ -269,7 +268,7 @@ class FractalTransformerViewTest extends TestCase
         $this->assertEquals(
             [
                 'article' => ['title' => 'First Article'],
-                'author' => $author
+                'author' => $author,
             ],
             $this->protectedMethodCall($view, '_dataToSerialize')
         );
@@ -302,6 +301,7 @@ class FractalTransformerViewTest extends TestCase
         $class = new \ReflectionClass($obj);
         $method = $class->getMethod($name);
         $method->setAccessible(true);
+
         return $method->invokeArgs($obj, $args);
     }
 }
