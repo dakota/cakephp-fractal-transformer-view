@@ -5,8 +5,8 @@ namespace FractalTransformerView\View;
 
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventManager;
-use Cake\Network\Request;
-use Cake\Network\Response;
+use Cake\Http\ServerRequest;
+use Cake\Http\Response;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Utility\Hash;
@@ -25,25 +25,20 @@ use League\Fractal\TransformerAbstract;
 class FractalTransformerView extends JsonView
 {
     /**
-     * @var \League\Fractal\Serializer\SerializerAbstract
+     * @var \League\Fractal\Serializer\SerializerAbstract|null
      */
     protected $_serializer;
 
     /**
-     * @var array
-     */
-    protected $_specialVars;
-
-    /**
      * Constructor
      *
-     * @param \Cake\Network\Request $request Request instance.
-     * @param \Cake\Network\Response $response Response instance.
+     * @param \Cake\Http\ServerRequest $request Request instance.
+     * @param \Cake\Http\Response $response Response instance.
      * @param \Cake\Event\EventManager $eventManager EventManager instance.
      * @param array $viewOptions An array of view options
      */
     public function __construct(
-        ?Request $request = null,
+        ?ServerRequest $request = null,
         ?Response $response = null,
         ?EventManager $eventManager = null,
         array $viewOptions = []
@@ -117,15 +112,15 @@ class FractalTransformerView extends JsonView
      * Get transformer for given var
      *
      * @param mixed $var variable
-     * @param bool $varName variable name
-     * @return bool
+     * @param array|string|bool $varName variable name
+     * @return \League\Fractal\TransformerAbstract|null
      * @throws \Exception
      */
-    protected function getTransformer($var, $varName = false)
+    protected function getTransformer($var, $varName = false): ?TransformerAbstract
     {
         $_transform = $this->getConfig('transform');
-        $transformerClass = $varName
-            ? Hash::get((array)$_transform, $varName)
+        $transformerClass = is_string($varName)
+            ? Hash::get($_transform, $varName)
             : $_transform;
 
         if (is_null($transformerClass)) {
@@ -133,7 +128,7 @@ class FractalTransformerView extends JsonView
         }
 
         if ($transformerClass === false) {
-            return false;
+            return null;
         }
 
         if (!class_exists($transformerClass)) {
@@ -158,7 +153,7 @@ class FractalTransformerView extends JsonView
      *
      * @param \League\Fractal\Manager $manager Fractal manager
      * @param mixed $var variable
-     * @param bool $varName variable name
+     * @param string|array|bool $varName variable name
      * @return array
      * @throws \Exception
      */
